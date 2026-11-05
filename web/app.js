@@ -32,7 +32,7 @@ async function connect() {
   if (connected()) {
     release(); socket.close(); return;
   }
-  if (!isSecureContext) return status("Open the HTTPS pairing link after installing the certificate.");
+  if (!isSecureContext) return status("HTTP demo: enable this exact address in Chrome's test setting. See Phone setup.");
   if (!token) return status("Scan the pairing QR shown on the computer.");
   $("connect").disabled = true;
   try {
@@ -41,7 +41,8 @@ async function connect() {
       const permission = await DeviceOrientationEvent.requestPermission();
       if (permission !== "granted") throw new Error("Motion permission was denied.");
     }
-    socket = new WebSocket(`wss://${location.host}/ws`, `mouseboard.${token}`);
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    socket = new WebSocket(`${protocol}//${location.host}/ws`, `mouseboard.${token}`);
     status("Connecting…");
     socket.onopen = async () => {
       paused = false; sensors = false; lastSensor = performance.now(); resetMotion();

@@ -1,4 +1,4 @@
-"""Serve the phone page over local HTTPS and receive authenticated WebSockets."""
+"""Serve the phone page locally and receive authenticated WebSocket commands."""
 
 import argparse
 import asyncio
@@ -72,7 +72,7 @@ def phone_app(controller, token, origin):
         return web.FileResponse(ROOT / "web" / name, headers={
             "Cache-Control": "no-store",
             "X-Content-Type-Options": "nosniff",
-            "Content-Security-Policy": f"default-src 'self'; connect-src 'self' {origin.replace('https:', 'wss:')}; frame-ancestors 'none'",
+            "Content-Security-Policy": f"default-src 'self'; connect-src 'self' {origin.replace('http', 'ws', 1)}; frame-ancestors 'none'",
         })
 
     async def socket_handler(request):
@@ -142,8 +142,22 @@ def setup_app(ca_path, origin, token, setup_url):
         body{{font:17px system-ui;background:#101010;color:#eee;max-width:760px;margin:40px auto;padding:20px}}
         a{{color:#8bceff}}svg{{width:230px;height:230px;background:white;padding:12px}}
         li{{margin:20px 0}}code{{overflow-wrap:anywhere}}</style>
-        <h1>MouseBoard Lite</h1><p>Keep your phone and computer on the same trusted Wi-Fi.</p>
-        <ol><li>On the phone, download <a href="/ca.crt">the local CA certificate</a>.
+        <h1>MouseBoard Lite</h1><p>Keep your phone and computer on the same trusted Wi-Fi.</p>"""
+        if ca_path is None:
+            content += f"""<h2>Demo without a certificate</h2>
+            <p>This is an unencrypted local demo. Use it only on your own trusted Wi-Fi.</p>
+            <ol><li>On your phone, open Chrome and enter
+            <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>
+            in the address bar.</li>
+            <li>Under <b>Insecure origins treated as secure</b>, add this exact address:
+            <p><code>{origin}</code></p>Set it to <b>Enabled</b> and tap <b>Relaunch</b>.</li>
+            <li>Scan the Pair phone QR shown on the computer. Open it in Chrome,
+            tap Connect, then Recenter.</li></ol>
+            <p>After your demo, set this flag back to <b>Default</b> and relaunch Chrome.
+            Do not add wildcards or other sites. If your managed browser blocks this
+            test setting, use HTTPS mode instead.</p>"""
+        else:
+            content += """<ol><li>On the phone, download <a href="/ca.crt">the local CA certificate</a>.
         Install it in Android Settings → Security and privacy → More security settings →
         Install from device storage → CA certificate. Search Settings for “CA certificate”
         if the menu differs. Install only on your own phone.</li>
@@ -160,15 +174,16 @@ def setup_app(ca_path, origin, token, setup_url):
 
     app = web.Application()
     app.router.add_get("/", instructions)
-    app.router.add_get("/ca.crt", download)
+    if ca_path is not None:
+        app.router.add_get("/ca.crt", download)
     return app
 
 
 async def run(args):
     host = str(ipaddress.IPv4Address(args.host or wifi_ip()))
-    context, ca_path = certificates(ROOT / ".local", host)
+    context, ca_path = (None, None) if args.demo_http else certificates(ROOT / ".local", host)
     token = secrets.token_urlsafe(24)
-    origin = f"https://{host}:{args.port}"
+    origin = f"{'http' if args.demo_http else 'https'}://{host}:{args.port}"
     controller = InputController()
     receivers = [
         (phone_app(controller, token, origin), args.port, context),
@@ -184,6 +199,9 @@ async def run(args):
         local_setup = f"http://127.0.0.1:{args.setup_port}/"
         print(f"\nMouseBoard Lite is ready.\nSetup and pairing QR: {local_setup}")
         print(f"Phone setup: http://{host}:{args.setup_port}/")
+        if args.demo_http:
+            print(f"HTTP demo: allow only {origin} in Chrome's insecure-origin test flag.")
+            print("Traffic is unencrypted. Restore the flag to Default after your demo.")
         print("Ctrl+C stops control. Moving the desktop mouse to a screen corner also stops input.")
         if not args.no_open:
             webbrowser.open(local_setup)
@@ -197,8 +215,10 @@ async def run(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--host", help="Computer's Wi-Fi IPv4 address (auto-detected by default)")
-    parser.add_argument("--port", type=int, default=8443, help="HTTPS controller port")
+    parser.add_argument("--port", type=int, default=8443, help="Controller port")
     parser.add_argument("--setup-port", type=int, default=8080, help="Certificate setup port")
+    parser.add_argument("--demo-http", action="store_true",
+                        help="Unencrypted local demo; requires Chrome's per-origin secure-context test flag")
     parser.add_argument("--no-open", action="store_true", help="Do not open the desktop setup page")
     try:
         asyncio.run(run(parser.parse_args()))

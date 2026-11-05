@@ -86,6 +86,9 @@ The supported desktop layout is English/US; arbitrary Unicode is outside this MV
 ## 5. Explain why HTTPS and pairing exist
 
 - Browsers require a secure context for orientation sensors.
+- For a classroom-only HTTP demo, Chrome can treat one explicitly allowed local
+  address as secure using a development flag. This removes certificate setup,
+  but does not encrypt traffic. Reset the flag after the demo.
 - A local certificate authority lets the phone trust the local HTTPS server.
   It is generated on this computer, and its private key never goes to the phone.
 - The certificate setup page carries no control commands.

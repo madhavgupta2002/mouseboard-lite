@@ -52,6 +52,32 @@ Allow Python on **private networks** if Windows Firewall asks.
 
 ## Connect your phone
 
+### Classroom demo without a certificate (Chrome on Android)
+
+Run `python server.py --demo-http`, or double-click `Start HTTP Demo.command` on
+Mac. This uses plain HTTP and generates no certificates. It requires one
+temporary, per-address Chrome test setting:
+
+1. Scan **Phone setup** to see your computer's exact controller address.
+2. On your phone, open Chrome and enter
+   `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
+3. Under **Insecure origins treated as secure**, add the exact controller
+   address shown on the setup page, including `http://` and the port.
+4. Set the flag to **Enabled** and tap **Relaunch**.
+5. Scan **Pair phone**, open it in Chrome, and tap **Connect**, then **Recenter**.
+
+Use this mode only on your own trusted Wi-Fi: traffic, typing, and the pairing
+code are **not encrypted**. After your demo, set the flag back to **Default** and
+relaunch Chrome. Do not use a wildcard or add unrelated sites.
+
+This is Chrome's [development workaround for testing secure-context features](https://www.chromium.org/Home/chromium-security/deprecating-powerful-features-on-insecure-origins/),
+not a production deployment method. A managed browser may block the setting.
+If the computer's Wi-Fi address changes, update the allowed address.
+
+### HTTPS mode with a local certificate
+
+Run `python server.py` or `Start MouseBoard Lite.command`.
+
 The script opens a setup page on the computer with two QR codes:
 
 1. Join the **same trusted Wi-Fi** on both devices.
@@ -63,8 +89,8 @@ The script opens a setup page on the computer with two QR codes:
    **Connect**. Allow motion sensors if asked.
 5. Hold the phone screen-up with its top edge away from you, then tap **Recenter**.
 
-The certificate is necessary because browsers expose motion sensors only to
-secure pages. It is created locally and kept in the ignored `.local/` directory.
+Browsers normally expose motion sensors only to secure pages. HTTPS mode's
+certificate is created locally and kept in the ignored `.local/` directory.
 Only the public certificate is downloadable; its private key stays on your
 computer. You only install the certificate once per computer, unless `.local/`
 is deleted. Remove it from Android's user credentials when you no longer use

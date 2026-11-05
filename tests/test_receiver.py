@@ -172,5 +172,42 @@ class ConnectionTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(self.ca.read_bytes(), before)
 
 
+class HttpDemoTests(unittest.IsolatedAsyncioTestCase):
+    async def test_plain_websocket_commands_and_csp(self):
+        desktop = Desktop()
+        server = TestServer(phone_app(InputController(desktop), "demo", "http://phone.test"))
+        await server.start_server()
+        try:
+            async with ClientSession() as client:
+                async with client.get(server.make_url("/")) as response:
+                    self.assertIn("ws://phone.test", response.headers["Content-Security-Policy"])
+                async with client.ws_connect(
+                    server.make_url("/ws").with_scheme("ws"),
+                    protocols=["mouseboard.demo"], headers={"Origin": "http://phone.test"},
+                ) as connection:
+                    self.assertEqual((await connection.receive_json())["type"], "ready")
+                    await connection.send_json({"type": "move", "x": 6, "y": -4})
+                    await connection.send_json({"type": "ping"})
+                    self.assertEqual((await connection.receive_json())["type"], "pong")
+                    self.assertIn(("moveRel", (6, -4), {}), desktop.calls)
+        finally:
+            await server.close()
+
+    async def test_demo_setup_has_exact_origin_and_no_certificate_download(self):
+        server = TestServer(setup_app(None, "http://192.168.1.20:8443", "demo-code", "http://phone.test"))
+        await server.start_server()
+        try:
+            async with ClientSession() as client:
+                async with client.get(server.make_url("/")) as response:
+                    page = await response.text()
+                    self.assertIn("chrome://flags/#unsafely-treat-insecure-origin-as-secure", page)
+                    self.assertIn("http://192.168.1.20:8443", page)
+                    self.assertIn("unencrypted", page)
+                async with client.get(server.make_url("/ca.crt")) as response:
+                    self.assertEqual(response.status, 404)
+        finally:
+            await server.close()
+
+
 if __name__ == "__main__":
     unittest.main()
