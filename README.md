@@ -59,8 +59,9 @@ Mac. This uses plain HTTP and generates no certificates. It requires one
 temporary, per-address Chrome test setting:
 
 1. Scan **Phone setup** to see your computer's exact controller address.
-2. On your phone, open Chrome and enter
-   `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
+2. Scan **Chrome settings QR**. If the scanner does not open the settings,
+   copy the scanned text and paste it into Chrome's address bar. The setup page
+   also has a **Copy address** button.
 3. Under **Insecure origins treated as secure**, add the exact controller
    address shown on the setup page, including `http://` and the port.
 4. Set the flag to **Enabled** and tap **Relaunch**.

@@ -10,7 +10,7 @@ from aiohttp import ClientSession, TCPConnector, WSServerHandshakeError
 from aiohttp.test_utils import TestServer
 
 from input_control import InputController
-from server import certificates, phone_app, setup_app
+from server import certificates, phone_app, qr_svg, setup_app
 
 
 class Desktop:
@@ -201,6 +201,9 @@ class HttpDemoTests(unittest.IsolatedAsyncioTestCase):
                 async with client.get(server.make_url("/")) as response:
                     page = await response.text()
                     self.assertIn("chrome://flags/#unsafely-treat-insecure-origin-as-secure", page)
+                    self.assertIn(qr_svg("chrome://flags/#unsafely-treat-insecure-origin-as-secure"), page)
+                    self.assertIn('id="chrome-address"', page)
+                    self.assertIn("Copy address", page)
                     self.assertIn("http://192.168.1.20:8443", page)
                     self.assertIn("unencrypted", page)
                 async with client.get(server.make_url("/ca.crt")) as response:

@@ -128,6 +128,8 @@ def phone_app(controller, token, origin):
 
 
 def setup_app(ca_path, origin, token, setup_url):
+    chrome_flags = "chrome://flags/#unsafely-treat-insecure-origin-as-secure"
+
     async def download(_request):
         return web.FileResponse(ca_path, headers={
             "Content-Type": "application/x-x509-ca-cert",
@@ -141,14 +143,21 @@ def setup_app(ca_path, origin, token, setup_url):
         <title>MouseBoard Lite setup</title><style>
         body{{font:17px system-ui;background:#101010;color:#eee;max-width:760px;margin:40px auto;padding:20px}}
         a{{color:#8bceff}}svg{{width:230px;height:230px;background:white;padding:12px}}
-        li{{margin:20px 0}}code{{overflow-wrap:anywhere}}</style>
+        li{{margin:20px 0}}code{{overflow-wrap:anywhere}}
+        input{{width:100%;padding:12px;box-sizing:border-box;background:#222;color:#eee;border:1px solid #555}}
+        button{{padding:10px 16px;margin-top:8px;cursor:pointer}}</style>
         <h1>MouseBoard Lite</h1><p>Keep your phone and computer on the same trusted Wi-Fi.</p>"""
         if ca_path is None:
             content += f"""<h2>Demo without a certificate</h2>
             <p>This is an unencrypted local demo. Use it only on your own trusted Wi-Fi.</p>
-            <ol><li>On your phone, open Chrome and enter
-            <code>chrome://flags/#unsafely-treat-insecure-origin-as-secure</code>
-            in the address bar.</li>
+            <h2>Chrome settings QR</h2>{qr_svg(chrome_flags)}
+            <p>Scan this QR first. If your scanner does not open Chrome settings,
+            copy the scanned text and paste it into Chrome's address bar.</p>
+            <label for="chrome-address">Chrome settings address</label>
+            <input id="chrome-address" readonly value="{chrome_flags}" onclick="this.select()">
+            <button onclick="document.getElementById('chrome-address').select();
+            this.textContent = document.execCommand('copy') ? 'Copied' : 'Select the address and copy';">Copy address</button>
+            <ol><li>Open the scanned address in <b>Chrome</b>.</li>
             <li>Under <b>Insecure origins treated as secure</b>, add this exact address:
             <p><code>{origin}</code></p>Set it to <b>Enabled</b> and tap <b>Relaunch</b>.</li>
             <li>Scan the Pair phone QR shown on the computer. Open it in Chrome,
