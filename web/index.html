@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080808">
+  <title>MouseBoard Lite</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script type="module" src="/app.js"></script>
+</head>
+<body>
+  <header><div><h1>MouseBoard <span>Lite</span></h1><p id="status" role="status">Tap Connect to start</p></div>
+    <button id="connect">Connect</button></header>
+  <main>
+    <section class="toolbar"><button id="center" disabled>⊙ Recenter</button>
+      <label>Speed <input id="speed" type="range" min="300" max="1800" value="900"></label>
+      <button id="pause" disabled>Pause</button></section>
+    <section class="pads" aria-label="Mouse controls">
+      <button id="left" disabled>Left<span>Hold to drag</span></button>
+      <div id="scroll" aria-label="Swipe to scroll">↕<span>SCROLL</span></div>
+      <button id="right" disabled>Right<span>Hold to drag</span></button>
+    </section>
+    <section class="keyboard">
+      <label for="typing">Keyboard <span>English / US layout</span></label>
+      <textarea id="typing" rows="3" placeholder="Tap here to type on your computer" autocomplete="off"
+        autocapitalize="off" spellcheck="false" disabled></textarea>
+      <div class="keys"><button data-key="esc" disabled>Esc</button><button data-key="tab" disabled>Tab</button>
+        <button data-key="backspace" disabled>⌫</button><button data-key="enter" disabled>Enter ↵</button></div>
+      <p>Hold your phone screen-up. Turn left/right and tilt up/down.</p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,4 @@
+aiohttp==3.14.5
+PyAutoGUI==0.9.54
+trustme==1.2.1
+qrcode==8.2
